@@ -14,7 +14,7 @@ import androidx.core.app.ComponentActivity
 import androidx.core.app.ComponentActivity.ExtraData
 import androidx.core.content.ContextCompat.getSystemService
 import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-
+import com.google.gson.Gson
 
 
 class MainActivity : AppCompatActivity() {
@@ -22,13 +22,13 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        textView.text = ""
-        textView.movementMethod = ScrollingMovementMethod()
+        textView2.text = ""
+        //textView.movementMethod = ScrollingMovementMethod()
 
 
         button.setOnClickListener {
-            textView.text = "fetching new data..."
-            val httpAsync = "https://corona.lmao.ninja/v2/jhucsse"
+            textView3.text = "fetching new data..."
+            val url = "https://corona.lmao.ninja/v2/jhucsse/counties/Champaign"
                 .httpGet()
                 .responseString { request, response, result ->
                     when (result) {
@@ -37,13 +37,18 @@ class MainActivity : AppCompatActivity() {
                             println(ex)
                         }
                         is Result.Success -> {
-                            val data = result.get()
-                            textView.text = data
+                            val json = result.get()
+                            var gson = Gson()
+                            var list: Array<Chunk> = gson.fromJson(json, Array<Chunk>::class.java)
+                            val confirmedCases = list.get(0).stats.confirmed
+                            textView2.text = confirmedCases.toString()
                         }
                     }
                 }
 
-            httpAsync.join()
+            url.join()
         }
     }
 }
+class Chunk(val country: String, val province: String, val county: String, val updatedAt: String, val stats: Stats)
+class Stats(val confirmed: Int, val deaths: Int, val recovered: Int)
